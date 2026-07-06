@@ -244,17 +244,60 @@ const translations = {
 };
 
 
-function changeLanguage(lang) {
-  localStorage.setItem("selectedLanguage", lang); // Save preference
+const SUPPORTED_LANGUAGES = ["en", "de"];
+const DEFAULT_LANGUAGE = "de";
+const LANGUAGE_MANUAL_KEY = "languageManuallySelected";
 
-  // Update text content based on language
+function detectBrowserLanguage() {
+  const browserLangs = navigator.languages?.length
+    ? navigator.languages
+    : [navigator.language];
+
+  for (const lang of browserLangs) {
+    const code = lang.toLowerCase().split("-")[0];
+    if (SUPPORTED_LANGUAGES.includes(code)) {
+      return code;
+    }
+  }
+
+  return null;
+}
+
+function getInitialLanguage() {
+  if (localStorage.getItem(LANGUAGE_MANUAL_KEY) === "true") {
+    const savedLang = localStorage.getItem("selectedLanguage");
+    if (savedLang && translations[savedLang]) {
+      return savedLang;
+    }
+  }
+
+  return detectBrowserLanguage() || DEFAULT_LANGUAGE;
+}
+
+function updateLanguageToggleButton(lang) {
+  const toggle = document.getElementById("lang-toggle");
+  if (!toggle) return;
+
+  const targetLang = lang === "en" ? "de" : "en";
+  toggle.innerText = targetLang.toUpperCase();
+  toggle.title =
+    targetLang === "de" ? "Switch to German" : "Switch to English";
+}
+
+function changeLanguage(lang, persist = false) {
+  if (persist) {
+    localStorage.setItem("selectedLanguage", lang);
+    localStorage.setItem(LANGUAGE_MANUAL_KEY, "true");
+  }
+
+  document.documentElement.lang = lang;
+
   document.querySelectorAll("[data-lang]").forEach((element) => {
-    let key = element.getAttribute("data-lang");
-    element.innerHTML = translations[lang][key]; // Use innerHTML for <br /> support
+    const key = element.getAttribute("data-lang");
+    element.innerHTML = translations[lang][key];
   });
 
-  // Update the button label
-  document.getElementById("lang-toggle").innerText = translations[lang].switchLabel;
+  updateLanguageToggleButton(lang);
 }
 
 // function updateLanguage(lang) {
@@ -275,12 +318,11 @@ function changeLanguage(lang) {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-  const savedLang = localStorage.getItem("selectedLanguage") || "en";
-  changeLanguage(savedLang);
+  changeLanguage(getInitialLanguage());
 
   document.getElementById("lang-toggle").addEventListener("click", function () {
-    let currentLang = localStorage.getItem("selectedLanguage") || "en";
-    let newLang = currentLang === "en" ? "de" : "en";
-    changeLanguage(newLang);
+    const currentLang = document.documentElement.lang || getInitialLanguage();
+    const newLang = currentLang === "en" ? "de" : "en";
+    changeLanguage(newLang, true);
   });
 });
