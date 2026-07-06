@@ -25,18 +25,18 @@ const translations = {
       "I value collaborative development and actively contribute through pull request reviews, code discussions, and knowledge sharing. Managing rebase, merge, and release processes has taught me the importance of clear communication and structured workflows in delivering reliable software as part of a team.",
       skillsTitle: "Skills",
       skillsDesc:
-        "As a seasoned full-stack developer, I architect and deliver enterprise-grade web and mobile applications. I leverage modern frameworks and best practices to build scalable, maintainable solutions that meet complex business requirements while ensuring optimal performance and security.",
+        "As a seasoned full-stack developer, I architect and deliver enterprise-grade web and mobile applications. I leverage modern frameworks and best practices to build scalable, maintainable solutions that meet complex business requirements while ensuring optimal performance and security. I also work with PHP and WordPress for content-driven websites and CMS-based solutions.",
       frontendTitle: "Frontend Development",
       frontendDesc:
         "Architecting and developing scalable frontend solutions using modern frameworks and libraries. I build production-ready applications with React, Next.js, and React Native, implementing internationalization (i18n) for global reach and managing complex state with Redux.",
       frontendCore: "Core Technologies:",
       backendTitle: "Backend Development",
       backendDesc:
-        "Designing and implementing robust server-side architectures with Node.js, Express, and NestJS. I develop scalable RESTful APIs, architect database solutions, and ensure secure authentication and authorization systems for enterprise applications.",
+        "Designing and implementing robust server-side architectures with Node.js, Express, NestJS, and PHP. I develop scalable RESTful APIs, architect database solutions, and ensure secure authentication and authorization systems for enterprise applications.",
       backendCore: "Core Technologies:",
       additionalTitle: "Additional Skills",
       additionalDesc:
-        "Leading development workflows through code reviews, pull request management, and release processes. I orchestrate rebase and merge strategies, maintain code quality standards, and ensure seamless deployments. Experienced with comprehensive testing frameworks and cloud infrastructure management.",
+        "Leading development workflows through code reviews, pull request management, and release processes. I orchestrate rebase and merge strategies, maintain code quality standards, and ensure seamless deployments. Experienced with comprehensive testing frameworks, cloud infrastructure management, and WordPress for building and customizing content-managed websites.",
       additionalCore: "Technologies & Tools:",
       projectsTitle: "Projects",
       projectsDesc:
@@ -147,18 +147,18 @@ const translations = {
       "Ich schätze kollaborative Entwicklung und trage aktiv durch Pull-Request-Reviews, Code-Diskussionen und Wissensaustausch bei. Die Verwaltung von Rebase-, Merge- und Release-Prozessen hat mich die Bedeutung klarer Kommunikation und strukturierter Workflows bei der Bereitstellung zuverlässiger Software als Teil eines Teams gelehrt.",
       skillsTitle: "Fähigkeiten",
       skillsDesc:
-        "Als erfahrener Full-Stack-Entwickler entwerfe und entwickle ich unternehmensreife Web- und Mobile-Anwendungen. Ich nutze moderne Frameworks und Best Practices, um skalierbare, wartbare Lösungen zu erstellen, die komplexe Geschäftsanforderungen erfüllen und gleichzeitig optimale Leistung und Sicherheit gewährleisten.",
+        "Als erfahrener Full-Stack-Entwickler entwerfe und entwickle ich unternehmensreife Web- und Mobile-Anwendungen. Ich nutze moderne Frameworks und Best Practices, um skalierbare, wartbare Lösungen zu erstellen, die komplexe Geschäftsanforderungen erfüllen und gleichzeitig optimale Leistung und Sicherheit gewährleisten. Zusätzlich arbeite ich mit PHP und WordPress für inhaltsgetriebene Websites und CMS-basierte Lösungen.",
       frontendTitle: "Frontend-Entwicklung",
       frontendDesc:
         "Entwerfen und Entwickeln skalierbarer Frontend-Lösungen mit modernen Frameworks und Bibliotheken. Ich erstelle produktionsreife Anwendungen mit React, Next.js und React Native, implementiere Internationalisierung (i18n) für globale Reichweite und verwalte komplexe Zustände mit Redux.",
       frontendCore: "Kerntechnologien:",
       backendTitle: "Backend-Entwicklung",
       backendDesc:
-        "Entwerfen und Implementieren robuster serverseitiger Architekturen mit Node.js, Express und NestJS. Ich entwickle skalierbare RESTful APIs, entwerfe Datenbanklösungen und gewährleiste sichere Authentifizierungs- und Autorisierungssysteme für Unternehmensanwendungen.",
+        "Entwerfen und Implementieren robuster serverseitiger Architekturen mit Node.js, Express, NestJS und PHP. Ich entwickle skalierbare RESTful APIs, entwerfe Datenbanklösungen und gewährleiste sichere Authentifizierungs- und Autorisierungssysteme für Unternehmensanwendungen.",
       backendCore: "Kerntechnologien:",
       additionalTitle: "Zusätzliche Fähigkeiten",
       additionalDesc:
-        "Leitung von Entwicklungs-Workflows durch Code-Reviews, Pull-Request-Verwaltung und Release-Prozesse. Ich orchestriere Rebase- und Merge-Strategien, halte Code-Qualitätsstandards aufrecht und gewährleiste nahtlose Deployments. Erfahren mit umfassenden Test-Frameworks und Cloud-Infrastruktur-Management.",
+        "Leitung von Entwicklungs-Workflows durch Code-Reviews, Pull-Request-Verwaltung und Release-Prozesse. Ich orchestriere Rebase- und Merge-Strategien, halte Code-Qualitätsstandards aufrecht und gewährleiste nahtlose Deployments. Erfahren mit umfassenden Test-Frameworks, Cloud-Infrastruktur-Management und WordPress für den Aufbau und die Anpassung inhaltsverwalteter Websites.",
       additionalCore: "Technologien & Werkzeuge:",
       projectsTitle: "Projekte",
     projectsDesc:
@@ -244,17 +244,60 @@ const translations = {
 };
 
 
-function changeLanguage(lang) {
-  localStorage.setItem("selectedLanguage", lang); // Save preference
+const SUPPORTED_LANGUAGES = ["en", "de"];
+const DEFAULT_LANGUAGE = "de";
+const LANGUAGE_MANUAL_KEY = "languageManuallySelected";
 
-  // Update text content based on language
+function detectBrowserLanguage() {
+  const browserLangs = navigator.languages?.length
+    ? navigator.languages
+    : [navigator.language];
+
+  for (const lang of browserLangs) {
+    const code = lang.toLowerCase().split("-")[0];
+    if (SUPPORTED_LANGUAGES.includes(code)) {
+      return code;
+    }
+  }
+
+  return null;
+}
+
+function getInitialLanguage() {
+  if (localStorage.getItem(LANGUAGE_MANUAL_KEY) === "true") {
+    const savedLang = localStorage.getItem("selectedLanguage");
+    if (savedLang && translations[savedLang]) {
+      return savedLang;
+    }
+  }
+
+  return detectBrowserLanguage() || DEFAULT_LANGUAGE;
+}
+
+function updateLanguageToggleButton(lang) {
+  const toggle = document.getElementById("lang-toggle");
+  if (!toggle) return;
+
+  const targetLang = lang === "en" ? "de" : "en";
+  toggle.innerText = targetLang.toUpperCase();
+  toggle.title =
+    targetLang === "de" ? "Switch to German" : "Switch to English";
+}
+
+function changeLanguage(lang, persist = false) {
+  if (persist) {
+    localStorage.setItem("selectedLanguage", lang);
+    localStorage.setItem(LANGUAGE_MANUAL_KEY, "true");
+  }
+
+  document.documentElement.lang = lang;
+
   document.querySelectorAll("[data-lang]").forEach((element) => {
-    let key = element.getAttribute("data-lang");
-    element.innerHTML = translations[lang][key]; // Use innerHTML for <br /> support
+    const key = element.getAttribute("data-lang");
+    element.innerHTML = translations[lang][key];
   });
 
-  // Update the button label
-  document.getElementById("lang-toggle").innerText = translations[lang].switchLabel;
+  updateLanguageToggleButton(lang);
 }
 
 // function updateLanguage(lang) {
@@ -275,12 +318,11 @@ function changeLanguage(lang) {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-  const savedLang = localStorage.getItem("selectedLanguage") || "en";
-  changeLanguage(savedLang);
+  changeLanguage(getInitialLanguage());
 
   document.getElementById("lang-toggle").addEventListener("click", function () {
-    let currentLang = localStorage.getItem("selectedLanguage") || "en";
-    let newLang = currentLang === "en" ? "de" : "en";
-    changeLanguage(newLang);
+    const currentLang = document.documentElement.lang || getInitialLanguage();
+    const newLang = currentLang === "en" ? "de" : "en";
+    changeLanguage(newLang, true);
   });
 });
